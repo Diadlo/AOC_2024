@@ -47,6 +47,19 @@ func reportIsSafe(report []int) bool {
 	return true
 }
 
+func buildTryReport(report []int, skipIndex int) []int {
+	result := make([]int, len(report)-1)
+	for i := 0; i < skipIndex; i++ {
+		result[i] = report[i]
+	}
+
+	for i := skipIndex + 1; i < len(report); i++ {
+		result[i-1] = report[i]
+	}
+
+	return result
+}
+
 func main() {
 	input, err := io.ReadAll(os.Stdin)
 	if err != nil {
@@ -72,8 +85,12 @@ func main() {
 
 	count := 0
 	for _, report := range reports {
-		if reportIsSafe(report) {
-			count += 1
+		for i := range report {
+			tryReport := buildTryReport(report, i)
+			if reportIsSafe(tryReport) {
+				count += 1
+				break
+			}
 		}
 	}
 
