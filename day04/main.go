@@ -61,6 +61,27 @@ func countWords(data [][]byte, startRow int, startCol int, word string) int {
 	return count
 }
 
+/*
+M S   M M   S M   S S
+ A     A     A     A
+M S   S S   S M   M M
+*/
+
+func hasMasWord(data [][]byte, row int, col int) bool {
+	var result string
+
+	addChar(data, row-1, col-1, &result)
+	addChar(data, row-1, col+1, &result)
+	addChar(data, row, col, &result)
+	addChar(data, row+1, col-1, &result)
+	addChar(data, row+1, col+1, &result)
+
+	return result == "MSAMS" ||
+		result == "MMASS" ||
+		result == "SMASM" ||
+		result == "SSAMM"
+}
+
 func main() {
 	input, err := io.ReadAll(os.Stdin)
 	if err != nil {
@@ -79,13 +100,18 @@ func main() {
 		}
 	}
 
-	count := 0
+	countXMAS := 0
+	countMAS := 0
 	for i := range data {
 		for j := range data[i] {
-			count += countWords(data, i, j, "XMAS")
-			count += countWords(data, i, j, "SAMX")
+			countXMAS += countWords(data, i, j, "XMAS")
+			countXMAS += countWords(data, i, j, "SAMX")
+			if hasMasWord(data, i, j) {
+				countMAS += 1
+			}
 		}
 	}
 
-	fmt.Printf("Count: %v\n", count)
+	fmt.Printf("countXMAS: %v\n", countXMAS)
+	fmt.Printf("countMAS: %v\n", countMAS)
 }
