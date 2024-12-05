@@ -52,34 +52,48 @@ func parseInput(input string) ([]Rule, [][]int) {
 	return rules, updates
 }
 
-func updateIsCorrect(rulesForPages [][]Rule, update []int) bool {
+func reorderUpdate(rulesForPages [][]Rule, update []int) ([]int, bool) {
+	wasReordered := false
 	setOfPages := make(map[int]bool)
 	for _, page := range update {
 		setOfPages[page] = true
 	}
 
-	for i, page := range update {
-		rightSet := make(map[int]bool)
-		for _, p := range update[i+1:] {
-			rightSet[p] = true
-		}
-
-		rulesForPage := rulesForPages[page]
-		for _, rule := range rulesForPage {
-			if !setOfPages[rule.first] || !setOfPages[rule.second] {
-				// One of the page from rule is missing - skip
-				continue
+	wasReorderedThisIteration := true
+	for wasReorderedThisIteration {
+		wasReorderedThisIteration = false
+		for i := range update {
+			page := update[i]
+			rightSet := make(map[int]bool)
+			for _, p := range update[i+1:] {
+				rightSet[p] = true
 			}
 
-			if page == rule.first {
-				if !rightSet[rule.second] {
-					return false
+			rulesForPage := rulesForPages[page]
+			for _, rule := range rulesForPage {
+				if !setOfPages[rule.first] || !setOfPages[rule.second] {
+					// One of the page from rule is missing - skip
+					continue
+				}
+
+				if page == rule.first {
+					for j := range update[:i] {
+						page2 := update[j]
+						if page2 == rule.second {
+							// Incorrect order
+							tmp := update[j]
+							update[j] = update[i]
+							update[i] = tmp
+							wasReordered = true
+							wasReorderedThisIteration = true
+						}
+					}
 				}
 			}
 		}
 	}
 
-	return true
+	return update, wasReordered
 }
 
 func main() {
@@ -103,20 +117,25 @@ func main() {
 	correctUpdates := make([][]int, 0)
 	incorrectUpdates := make([][]int, 0)
 	for _, update := range updates {
-		if updateIsCorrect(rulesForPages, update) {
+		newOrder, wasReordered := reorderUpdate(rulesForPages, update)
+		if !wasReordered {
 			correctUpdates = append(correctUpdates, update)
 		} else {
-			incorrectUpdates = append(incorrectUpdates, update)
+			incorrectUpdates = append(incorrectUpdates, newOrder)
 		}
 	}
-
-	//fmt.Printf("Correct: %v\n", correctUpdates)
-	fmt.Printf("Incorrect: %v\n", incorrectUpdates)
 
 	result := 0
 	for _, update := range correctUpdates {
 		result += update[len(update)/2]
 	}
 
-	fmt.Printf("result: %v", result)
+	fmt.Printf("result1: %v\n", result)
+
+	result = 0
+	for _, update := range incorrectUpdates {
+		result += update[len(update)/2]
+	}
+
+	fmt.Printf("result2: %v\n", result)
 }
